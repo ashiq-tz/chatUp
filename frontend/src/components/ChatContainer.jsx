@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useChatStore } from '../store/useChatStore.js'
 import { useAuthStore } from '../store/useAuthStore.js'
 import ChatHeader from './ChatHeader.jsx'
@@ -11,9 +11,19 @@ const ChatContainer = () => {
   const {selectedUser, getMessagesByUserId, messages, isMessagesLoading} = useChatStore()
   const {authUser} = useAuthStore()
 
+  const messageEndRef = useRef(null)
+
   useEffect(() => {
     getMessagesByUserId(selectedUser._id)
   },[selectedUser,getMessagesByUserId])
+
+  useEffect(() => {
+    if(messageEndRef.current){
+      messageEndRef.current.scrollIntoView({behavior: "smooth"})
+    }
+  },[messages])
+
+
 
   return (
     <>
@@ -22,8 +32,8 @@ const ChatContainer = () => {
         {messages.length > 0 && !isMessagesLoading ? (
           <div className='max-w-3xl mx-auto space-y-6'>
             {messages.map(msg => (
-              <div key={msg._id} className={`chat ${msg.senderId === authUser._id ? "caht-end" : "chat-start"}`}>
-                <div className={`chat-bubble relative ${msg.senderId === authUser._id ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-200"}`}>
+              <div key={msg._id} className={`chat ${msg.senderId === authUser._id ? "chat-end" : "chat-start"}`}>
+                <div className={`chat-bubble relative ${msg.senderId === authUser._id ? "bg-blue-400 text-white" : "bg-slate-800 text-slate-200"}`}>
                     {msg.image && <img src={msg.image} alt='shared' className='rounded-lg h-48 object-cover' />}
                     {msg.text && <p className='mt-2'>{msg.text}</p>}
 
@@ -31,12 +41,17 @@ const ChatContainer = () => {
                       {new Date(msg.createdAt).toLocaleTimeString(undefined, {
                         hour: "2-digit",
                         minute: "2-digit",
+                        hour12: true,
                       })}
                    </p>
 
                 </div>
               </div>
             ))}
+
+            {/* auto scroll down target */}
+            <div ref={messageEndRef}></div>
+
           </div>
         ) : isMessagesLoading ? <MessagesLoadingSkeleton /> : (
           <NoChatHistoryPlaceholder name={selectedUser.fullName} />
