@@ -9,7 +9,7 @@ export const useChatStore = create ((set,get) => ({
     activeTab: "chats",
     selectedUser: null,
     isUsersLoading: false,
-    messagesLoading: false,
+    isMessagesLoading: false,
     isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
 
 
@@ -52,6 +52,22 @@ export const useChatStore = create ((set,get) => ({
             console.log("Error in useChatStore/getMyChatPartners", error);
         }finally{
             set({isUsersLoading: false})
+        }
+    },
+
+    getMessagesByUserId: async (userId) => {
+        set({isMessagesLoading: true})
+
+        try {
+
+            const res = await axiosInstance.get(`/messages/${userId}`)
+            set({messages: res.data})
+
+        } catch (error) {
+            toast.error(error.response?.data?.message || "something went wrongg")
+            console.log("Error in useChatStore/getMessagesByUserId", error);
+        }finally{
+            set({isMessagesLoading: false})
         }
     },
 
