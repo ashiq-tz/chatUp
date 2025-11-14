@@ -1,6 +1,9 @@
 import {create} from 'zustand'
 import {axiosInstance} from '../lib/axios'
 import toast from 'react-hot-toast'
+import { io } from 'socket.io-client'
+
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:3000" : "/";
 
 export const useAuthStore = create((set,get) => ({
 
@@ -8,11 +11,16 @@ export const useAuthStore = create((set,get) => ({
     isCheckingAuth: true,
     isSigningUp: false,
     isLoggingIn: false,
+    socket: null,
+    onlineUsers: [],
 
     checkAuth: async() => {
         try {
             const res = await axiosInstance.get("/auth/check")
             set({authUser: res.data})
+
+            get().connectSocket()
+
         } catch (error) {
             console.log("Error in checkAuth", error)
             set({authUser: null})
@@ -28,6 +36,8 @@ export const useAuthStore = create((set,get) => ({
             set({authUser: res.data})
 
             toast.success("Account Created Successfully")
+
+            get().connectSocket()
 
         } catch (error) {
             toast.error(error.response.data.message)
@@ -45,6 +55,8 @@ export const useAuthStore = create((set,get) => ({
 
             toast.success("Logged in successfully")
 
+            get().connectSocket()
+
         } catch (error) {
             toast.error(error.response.data.message)
             console.log("Error in useAuthStore/login")
@@ -58,6 +70,9 @@ export const useAuthStore = create((set,get) => ({
             await axiosInstance.post("/auth/logout")
             set({authUser: null})
             toast.success("Logged out successfully")
+
+            get().disconnectSocket()
+
         } catch (error) {
             toast.error("Error in logging out")
             console.log("Logout error", error)
@@ -75,7 +90,31 @@ export const useAuthStore = create((set,get) => ({
             toast.error(error.response.data.message)
             console.log("Error in useAuthStore/updateProfile")
         }
-    }
+    },
+
+    connectSocket: () => {
+        const {authUser} = get()
+        if(!authUser || get().socket?.connected) return
+
+        const socket = io(BASE_URL, {
+            withCredentials:true // this ensures that cookies are sent with the connectionn
+        })
+
+        socket.connect()
+
+        set({socket:socket})
+
+        //listen for online users events
+        socket.on("getOnlineUsers", (userIds) => {
+            set({onlineUsers:userIds})
+        })
+    },
+
+    disconnectSocket: () => {
+        if(get().socket.connected){
+            get().socket.disconnect()
+        }
+    },
     
 
 }))

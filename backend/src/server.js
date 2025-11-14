@@ -8,8 +8,10 @@ import messageRoutes from './routes/message.route.js'
 import { connectDB } from './lib/db.js';
 
 import { ENV } from './lib/env.js';
+import { app, server } from './lib/socket.js';
 
-const app = express();
+// const app = express(); no need any more..using in socket.js
+//now app is imported from lib/socket.js
 const __dirname = path.resolve();
 
 app.use(express.json({limit:"5mb"}))
@@ -25,13 +27,15 @@ if(ENV.NODE_ENV === "production"){
     app.use(express.static(path.join(__dirname, "../frontend/dist")))
 
     app.get("*", (req,res) => {
-        res.sendFile(path.join(__dirname, "../frontend/dist/index.html"))
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"))
     })
 }
 
 const PORT = ENV.PORT || 3000;
 
-app.listen(PORT,()=>{
+//instead of app.listen..after socket imp...we do server.listen
+//server is imported from socket.js
+server.listen(PORT,()=>{
     console.log("Server running on port: " + PORT)
     connectDB()
 })
