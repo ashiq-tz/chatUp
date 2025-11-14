@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -23,12 +24,22 @@ app.use("/api/auth",authRoutes)
 app.use("/api/messages", messageRoutes)
 
 //make ready for deployment (sevalla)
-if(ENV.NODE_ENV === "production"){
-    app.use(express.static(path.join(__dirname, "../frontend/dist")))
+const projectRoot = process.cwd();
+const frontendBuildPath = path.join(projectRoot, "frontend", "dist");
 
-    app.get("*", (req,res) => {
-        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"))
-    })
+if (fs.existsSync(frontendBuildPath)) {
+  // serve static files from frontend/dist if it exists
+  app.use(express.static(frontendBuildPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+
+  console.log("Serving frontend from:", frontendBuildPath);
+} else {
+  // helpful log so you don't get a silent Cannot GET /
+  console.log("No frontend build found at:", frontendBuildPath);
+  console.log("Frontend will NOT be served. Ensure the frontend is built during deploy (e.g. postinstall or build step).");
 }
 
 const PORT = ENV.PORT || 3000;
