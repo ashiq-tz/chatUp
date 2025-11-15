@@ -97,7 +97,7 @@ function LoginPage() {
                 className="w-full h-auto object-contain"
               />
               <div className="mt-6 text-center">
-                <h3 className="text-xl font-medium text-cyan-400">Talk. Share. Grow.</h3>
+                <h3 className="text-xl font-medium text-blue-400">Talk. Share. Grow.</h3>
 
                 <div className="mt-4 flex justify-center gap-4">
                   <span className="auth-badge">Secure</span>
